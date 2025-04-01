@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Máquinas Virtuales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        .input-light {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+        }
+        .input-light:focus {
+            background: white;
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        .input-light option {
+            background: white;
+            color: #1e293b;
+        }
+        .table-light {
+            background: white;
+        }
+        .table-light th {
+            background: #f8fafc;
+        }
+        .table-light tr:hover {
+            background: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- Header fijo en la parte superior -->
+    <header class="bg-blue-600 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white tracking-tight">Control de Activos Máquinas Virtuales</h1>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="flex items-center bg-white bg-opacity-25 text-white px-4 py-2 rounded-full text-sm shadow-lg">
+                        <span class="w-3 h-3 rounded-full bg-lime-400 mr-2 animate-pulse"></span>
+                        Sistema Activo
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <div class="flex gap-6">
+            <!-- Formulario -->
+            <div class="flex-grow glass-effect rounded-3xl shadow-xl p-8">
+                <form method="POST" class="flex flex-wrap gap-6 items-end">
+                    <div class="flex-1 min-w-[250px]">
+                        <label for="cliente" class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+                        <div class="relative">
+                            <select id="cliente-select" 
+                                    class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                                    onchange="manejarSeleccionCliente()">
+                                <option value="">Seleccione un cliente</option>
+                                <option value="nuevo">+ Agregar nuevo cliente</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente }}">{{ cliente }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="text" id="nuevo-cliente" class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hidden" placeholder="Nuevo cliente">
+                            <input type="hidden" id="cliente" name="cliente" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 min-w-[250px]">
+                        <label for="proyecto" class="block text-sm font-medium text-gray-700 mb-2">Proyecto</label>
+                        <div class="relative">
+                            <select id="proyecto-select" 
+                                    class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                                    onchange="manejarSeleccionProyecto()">
+                                <option value="">Seleccione un proyecto</option>
+                                <option value="nuevo">+ Agregar nuevo proyecto</option>
+                                {% for proyecto in proyectos %}
+                                <option value="{{ proyecto }}">{{ proyecto }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="text" id="nuevo-proyecto" class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hidden" placeholder="Nuevo proyecto">
+                            <input type="hidden" id="proyecto" name="proyecto" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 min-w-[250px]">
+                        <label for="num_maquinas" class="block text-sm font-medium text-gray-700 mb-2">Máquinas virtuales</label>
+                        <div class="relative">
+                            <select id="num_maquinas-select" 
+                                    class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
+                                    onchange="manejarSeleccionNumMaquinas()">
+                                <option value="">Seleccione una máquina</option>
+                                <option value="nuevo">+ Agregar nueva máquina</option>
+                                {% for num in numero_maquinas %}
+                                <option value="{{ num }}">{{ num }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="text" id="nuevo-num-maquinas" class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 hidden" placeholder="Nueva máquina">
+                            <input type="hidden" id="num_maquinas" name="num_maquinas" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 min-w-[250px]">
+                        <label for="tipo" class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                        <select id="tipo" name="tipo" required
+                            class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300">
+                            <option value="">Seleccione un tipo</option>
+                            <option value="Base de Datos">Base de Datos</option>
+                            <option value="Aplicación Koncilia">Aplicación Koncilia</option>
+                            <option value="APP & BD">APP y BD</option>
+                        </select>
+                    </div>
+
+                    <div class="flex-none">
+                        <button type="submit" 
+                            class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-sky-500 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-sky-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105">
+                            Guardar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de Registros -->
+        {% if registros %}
+        <div class="glass-effect rounded-3xl shadow-xl p-8 mt-8">
+            <!-- Filtro y título -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Registros Guardados</h2>
+                <div class="flex-1 max-w-md ml-4">
+                    <div class="relative">
+                        <input type="text" id="filtro-cliente" 
+                            class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 pl-10"
+                            placeholder="Buscar por cliente..." onkeyup="filtrarTabla()">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 table-light">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Cliente</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Proyecto</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Máquinas Virtuales</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for registro in registros %}
+                        <tr class="transition-all duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ registro.cliente }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ registro.proyecto }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ registro.num_maquinas }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if registro.tipo == 'Base de Datos' %}
+                                        bg-red-100 text-red-800
+                                    {% elif registro.tipo == 'APP & BD' %}
+                                        bg-amber-100 text-amber-800
+                                    {% else %}
+                                        bg-sky-100 text-sky-800
+                                    {% endif %}">
+                                    {{ registro.tipo }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function filtrarTabla() {
+            const filtroCliente = document.getElementById('filtro-cliente').value.toLowerCase();
+            const tabla = document.querySelector('table tbody');
+            const filas = tabla.getElementsByTagName('tr');
+
+            for (let fila of filas) {
+                const celdaCliente = fila.cells[0].textContent.toLowerCase();
+                if (celdaCliente.includes(filtroCliente)) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            }
+        }
+
+        function manejarSeleccionCliente() {
+            const select = document.getElementById('cliente-select');
+            const nuevoClienteInput = document.getElementById('nuevo-cliente');
+            const clienteHidden = document.getElementById('cliente');
+
+            if (select.value === 'nuevo') {
+                select.classList.add('hidden');
+                nuevoClienteInput.classList.remove('hidden');
+                nuevoClienteInput.required = true;
+                nuevoClienteInput.focus();
+                
+                nuevoClienteInput.oninput = function() {
+                    clienteHidden.value = this.value;
+                }
+            } else {
+                clienteHidden.value = select.value;
+            }
+        }
+
+        function manejarSeleccionNumMaquinas() {
+            const select = document.getElementById('num_maquinas-select');
+            const nuevoNumInput = document.getElementById('nuevo-num-maquinas');
+            const numMaquinasHidden = document.getElementById('num_maquinas');
+
+            if (select.value === 'nuevo') {
+                select.classList.add('hidden');
+                nuevoNumInput.classList.remove('hidden');
+                nuevoNumInput.required = true;
+                nuevoNumInput.focus();
+                
+                nuevoNumInput.oninput = function() {
+                    numMaquinasHidden.value = this.value;
+                }
+            } else {
+                numMaquinasHidden.value = select.value;
+            }
+        }
+
+        function manejarSeleccionProyecto() {
+            const select = document.getElementById('proyecto-select');
+            const nuevoProyectoInput = document.getElementById('nuevo-proyecto');
+            const proyectoHidden = document.getElementById('proyecto');
+
+            if (select.value === 'nuevo') {
+                select.classList.add('hidden');
+                nuevoProyectoInput.classList.remove('hidden');
+                nuevoProyectoInput.required = true;
+                nuevoProyectoInput.focus();
+                
+                nuevoProyectoInput.oninput = function() {
+                    proyectoHidden.value = this.value;
+                }
+            } else {
+                proyectoHidden.value = select.value;
+            }
+        }
+
+        document.getElementById('nuevo-cliente').addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.classList.add('hidden');
+                document.getElementById('cliente-select').classList.remove('hidden');
+                document.getElementById('cliente-select').value = '';
+                this.value = '';
+            }
+        });
+
+        document.getElementById('nuevo-num-maquinas').addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.classList.add('hidden');
+                document.getElementById('num_maquinas-select').classList.remove('hidden');
+                document.getElementById('num_maquinas-select').value = '';
+                this.value = '';
+            }
+        });
+
+        document.getElementById('nuevo-proyecto').addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.classList.add('hidden');
+                this.required = false;
+                document.getElementById('proyecto-select').classList.remove('hidden');
+                document.getElementById('proyecto-select').value = '';
+                this.value = '';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('cliente-select');
+            const clienteHidden = document.getElementById('cliente');
+            if (select.value && select.value !== 'nuevo') {
+                clienteHidden.value = select.value;
+            }
+
+            const selectNum = document.getElementById('num_maquinas-select');
+            const numMaquinasHidden = document.getElementById('num_maquinas');
+            if (selectNum.value && selectNum.value !== 'nuevo') {
+                numMaquinasHidden.value = selectNum.value;
+            }
+
+            const selectProyecto = document.getElementById('proyecto-select');
+            const proyectoHidden = document.getElementById('proyecto');
+            if (selectProyecto.value && selectProyecto.value !== 'nuevo') {
+                proyectoHidden.value = selectProyecto.value;
+            }
+        });
+    </script>
+</body>
+</html> 
