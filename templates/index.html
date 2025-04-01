@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koncilia - MV</title>
+    <title>Ambientes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-material-ui/material-ui.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -163,14 +165,23 @@
             <!-- Filtro y título -->
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Registros Guardados</h2>
-                <div class="flex-1 max-w-md ml-4">
-                    <div class="relative">
-                        <input type="text" id="filtro-cliente" 
-                            class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 pl-10"
-                            placeholder="Buscar por cliente..." onkeyup="filtrarTabla()">
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                <div class="flex items-center space-x-4">
+                    <button onclick="generarPDF()" 
+                        class="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
+                        <span>Descargar PDF</span>
+                    </button>
+                    <div class="flex-1 max-w-md">
+                        <div class="relative">
+                            <input type="text" id="filtro-cliente" 
+                                class="w-full px-4 py-3 rounded-xl input-light focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 pl-10"
+                                placeholder="Buscar por cliente..." onkeyup="filtrarTabla()">
+                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -448,6 +459,130 @@
                 return false;
             }
             return true;
+        }
+
+        function generarPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Título del documento centrado con color azul
+                doc.setFontSize(16);
+                doc.setTextColor(38, 100, 235); // Color azul #2664eb
+                const titleText = 'Informe de Máquinas Virtuales';
+                const titleWidth = doc.getStringUnitWidth(titleText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                doc.text(titleText, (pageWidth - titleWidth) / 2, 20);
+
+                // Información del informe (fecha centrada)
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                const fecha = new Date().toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const fechaText = `Generado el: ${fecha}`;
+                const fechaWidth = doc.getStringUnitWidth(fechaText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+                doc.text(fechaText, (pageWidth - fechaWidth) / 2, 30);
+
+                // Obtener datos de la tabla
+                const tabla = document.querySelector('table');
+                const filas = tabla.getElementsByTagName('tr');
+                const datos = [];
+
+                // Encabezados
+                const encabezados = ['Cliente', 'Proyecto', 'Máquinas Virtuales', 'Tipo'];
+                
+                // Datos de las filas
+                for (let i = 1; i < filas.length; i++) {
+                    const celdas = filas[i].getElementsByTagName('td');
+                    datos.push([
+                        celdas[0].textContent,
+                        celdas[1].textContent,
+                        celdas[2].textContent,
+                        celdas[3].textContent.trim()
+                    ]);
+                }
+
+                // Generar tabla en el PDF con mejor diseño
+                doc.autoTable({
+                    head: [encabezados],
+                    body: datos,
+                    startY: 40,
+                    theme: 'plain',
+                    styles: {
+                        fontSize: 7,
+                        cellPadding: { top: 1, right: 4, bottom: 1, left: 4 },
+                        lineColor: [220, 220, 220],
+                        lineWidth: 0.1,
+                        minCellHeight: 1
+                    },
+                    headStyles: {
+                        fillColor: [38, 100, 235],
+                        textColor: 255,
+                        fontSize: 8,
+                        fontStyle: 'bold',
+                        halign: 'center',
+                        cellPadding: { top: 2, right: 4, bottom: 2, left: 4 }
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 45, halign: 'center' },
+                        1: { cellWidth: 45, halign: 'center' },
+                        2: { cellWidth: 45, halign: 'center' },
+                        3: { cellWidth: 45, halign: 'center' }
+                    },
+                    bodyStyles: {
+                        fillColor: [255, 255, 255],
+                        textColor: 70,
+                        fontSize: 7,
+                        halign: 'center',
+                        cellPadding: { top: 1, right: 4, bottom: 1, left: 4 }
+                    },
+                    alternateRowStyles: {
+                        fillColor: [252, 252, 252]
+                    },
+                    margin: { top: 25, right: 15, bottom: 25, left: 15 },
+                    didDrawPage: function(data) {
+                        // Línea separadora en el pie de página
+                        doc.setDrawColor(38, 100, 235); // Color azul #2664eb
+                        doc.setLineWidth(0.5);
+                        doc.line(15, doc.internal.pageSize.getHeight() - 20, doc.internal.pageSize.getWidth() - 15, doc.internal.pageSize.getHeight() - 20);
+                        
+                        // Pie de página
+                        doc.setFontSize(8);
+                        doc.setTextColor(38, 100, 235); // Color azul #2664eb
+                        doc.text(
+                            `Página ${data.pageNumber} de ${doc.internal.getNumberOfPages()}`,
+                            doc.internal.pageSize.getWidth() / 2,
+                            doc.internal.pageSize.getHeight() - 10,
+                            { align: 'center' }
+                        );
+                    }
+                });
+
+                // Descargar el PDF
+                doc.save(`Informe_Maquinas_Virtuales_${new Date().toISOString().split('T')[0]}.pdf`);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡PDF Generado!',
+                    text: 'El informe se ha descargado correctamente',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al generar el PDF. Por favor, intente nuevamente.',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
         }
     </script>
 </body>
