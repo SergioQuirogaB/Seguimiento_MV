@@ -43,6 +43,10 @@ def guardar_registros(registros):
     with open('registros.json', 'w', encoding='utf-8') as f:
         json.dump(registros, f, ensure_ascii=False, indent=4)
 
+def cliente_en_uso(cliente):
+    registros = cargar_registros()
+    return any(r['cliente'] == cliente for r in registros)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     registros = cargar_registros()
@@ -105,6 +109,18 @@ def eliminar_registro(cliente, proyecto):
     
     # Guardar los registros actualizados
     guardar_registros(registros)
+    
+    return redirect(url_for('index'))
+
+@app.route('/eliminar_cliente/<cliente>')
+def eliminar_cliente(cliente):
+    if cliente_en_uso(cliente):
+        return redirect(url_for('index'))  # No eliminamos si está en uso
+        
+    clientes = cargar_clientes()
+    if cliente in clientes:
+        clientes.remove(cliente)
+        guardar_clientes(clientes)
     
     return redirect(url_for('index'))
 
