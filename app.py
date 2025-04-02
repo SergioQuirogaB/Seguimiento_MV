@@ -68,12 +68,14 @@ def index():
         registro_existente = None
         for i, registro in enumerate(registros):
             if (registro['cliente'] == nuevo_cliente and 
-                registro['proyecto'] == nuevo_proyecto):
+                registro['proyecto'] == nuevo_proyecto and
+                registro['num_maquinas'] == nuevo_registro['num_maquinas'] and
+                registro['tipo'] == nuevo_registro['tipo']):
                 registro_existente = i
                 break
         
         if registro_existente is not None:
-            # Actualizar registro existente
+            # Actualizar registro existente solo si es exactamente igual
             registros[registro_existente] = nuevo_registro
         else:
             # Agregar nuevo registro
