@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import json
 import os
 
@@ -61,7 +61,8 @@ def index():
             'cliente': nuevo_cliente,
             'proyecto': nuevo_proyecto,
             'num_maquinas': request.form['num_maquinas'],
-            'tipo': request.form['tipo']
+            'tipo': request.form['tipo'],
+            'observaciones': request.form.get('observaciones', '')  # Campo opcional
         }
         
         # Buscar si existe un registro igual
@@ -125,6 +126,23 @@ def eliminar_cliente(cliente):
         guardar_clientes(clientes)
     
     return redirect(url_for('index'))
+
+@app.route('/actualizar_observaciones/<cliente>/<proyecto>', methods=['POST'])
+def actualizar_observaciones(cliente, proyecto):
+    registros = cargar_registros()
+    
+    # Buscar el registro específico
+    for registro in registros:
+        if registro['cliente'] == cliente and registro['proyecto'] == proyecto:
+            # Actualizar las observaciones
+            data = request.get_json()
+            registro['observaciones'] = data.get('observaciones', '')
+            break
+    
+    # Guardar los cambios
+    guardar_registros(registros)
+    
+    return jsonify({'observaciones': registro['observaciones']})
 
 if __name__ == '__main__':
     app.run(debug=True) 

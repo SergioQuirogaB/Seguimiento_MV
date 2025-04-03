@@ -207,6 +207,7 @@
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Proyecto</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Máquinas Virtuales</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Observaciones</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
@@ -227,6 +228,26 @@
                                     {% endif %}">
                                     {{ registro.tipo }}
                                 </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                <div class="flex items-center">
+                                    <div class="flex-grow max-w-[200px]">
+                                        <span id="observaciones-{{ registro.cliente }}-{{ registro.proyecto }}" 
+                                            class="truncate block">{{ registro.observaciones or '' }}</span>
+                                        {% if registro.observaciones and registro.observaciones|length > 50 %}
+                                        <button onclick="mostrarObservacionCompleta('{{ registro.cliente }}', '{{ registro.proyecto }}', '{{ registro.observaciones }}')"
+                                            class="text-blue-600 hover:text-blue-800 text-xs mt-1">
+                                            Ver más...
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    <button onclick="editarObservaciones('{{ registro.cliente }}', '{{ registro.proyecto }}')" 
+                                        class="ml-2 text-yellow-500 hover:text-yellow-600 transition-colors duration-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                 <div class="flex space-x-3">
@@ -520,7 +541,7 @@
                 const datos = [];
 
                 // Encabezados
-                const encabezados = ['Cliente', 'Proyecto', 'Máquinas Virtuales', 'Tipo'];
+                const encabezados = ['Cliente', 'Proyecto', 'Máquinas Virtuales', 'Tipo', 'Observaciones'];
                 
                 // Datos de las filas
                 for (let i = 1; i < filas.length; i++) {
@@ -529,7 +550,8 @@
                         celdas[0].textContent,
                         celdas[1].textContent,
                         celdas[2].textContent,
-                        celdas[3].textContent.trim()
+                        celdas[3].textContent.trim(),
+                        celdas[4].textContent.trim()
                     ]);
                 }
 
@@ -555,10 +577,11 @@
                         cellPadding: { top: 2, right: 4, bottom: 2, left: 4 }
                     },
                     columnStyles: {
-                        0: { cellWidth: 45, halign: 'center' },
-                        1: { cellWidth: 45, halign: 'center' },
-                        2: { cellWidth: 45, halign: 'center' },
-                        3: { cellWidth: 45, halign: 'center' }
+                        0: { cellWidth: 40, halign: 'center' },
+                        1: { cellWidth: 40, halign: 'center' },
+                        2: { cellWidth: 40, halign: 'center' },
+                        3: { cellWidth: 30, halign: 'center' },
+                        4: { cellWidth: 40, halign: 'center' }
                     },
                     bodyStyles: {
                         fillColor: [255, 255, 255],
@@ -631,6 +654,68 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     window.location.href = `/eliminar_cliente/${encodeURIComponent(cliente)}`;
+                }
+            });
+        }
+
+        function editarObservaciones(cliente, proyecto) {
+            const spanObservaciones = document.getElementById(`observaciones-${cliente}-${proyecto}`);
+            const observacionesActuales = spanObservaciones.textContent.trim();
+            
+            Swal.fire({
+                title: 'Editar Observaciones',
+                input: 'textarea',
+                inputValue: observacionesActuales,
+                inputAttributes: {
+                    placeholder: 'Ingrese las observaciones...'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                showLoaderOnConfirm: true,
+                preConfirm: (observaciones) => {
+                    return fetch(`/actualizar_observaciones/${encodeURIComponent(cliente)}/${encodeURIComponent(proyecto)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ observaciones })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al guardar las observaciones');
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Error: ${error}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    spanObservaciones.textContent = result.value.observaciones;
+                    Swal.fire({
+                        title: '¡Guardado!',
+                        text: 'Las observaciones se han actualizado correctamente',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        function mostrarObservacionCompleta(cliente, proyecto, observacion) {
+            Swal.fire({
+                title: 'Observaciones',
+                html: `<div class="text-left">${observacion}</div>`,
+                width: '600px',
+                showCloseButton: true,
+                showConfirmButton: false,
+                customClass: {
+                    popup: 'rounded-lg',
+                    htmlContainer: 'text-left'
                 }
             });
         }
